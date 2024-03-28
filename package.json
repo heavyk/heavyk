@@ -1,0 +1,25 @@
+{
+  "name": "heavyk",
+  "version": "1.0.0",
+  "description": "my repo manager",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/heavyk/heavyk.git"
+  },
+  "author": "",
+  "license": "Unlicense",
+  "bugs": {
+    "url": "https://github.com/heavyk/heavyk/issues"
+  },
+  "homepage": "https://github.com/heavyk/heavyk#readme",
+  "dependencies": {
+    "fetch-enhanced": "^12.0.2",
+    "object-assign": "^4.1.1",
+    "pify": "^6.1.0",
+    "undici": "^6.10.2"
+  }
+}
