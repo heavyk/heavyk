@@ -1,5 +1,5 @@
-import fs from 'fs/promises'
-import path from 'path'
+import Fs from 'fs-extra/esm'
+import Path from 'path'
 import console from 'console'
 import assign from 'object-assign'
 
@@ -10,7 +10,8 @@ const fetch = fetch_enhanced(ufetch, {undici: true})
 
 // ----------------------------------------------------
 
-const token_path = path.resolve('../gh_token')
+const desktop_path = Path.resolve(Path.join(__dirname, '..'))
+const token_path = Path.resolve(Path.join(desktop_path, '..', gh_token))
 
 let gh_token
 let repo_name = 'testing123'
@@ -45,19 +46,48 @@ function GitHub (user, auth) {
   }
 }
 
+function Desktop (gh, path) {
+  if (!gh) throw new Error('desktop needs the github api')
+  if (!path) throw new Error('desktop needs to know its path')
+
+  
+
+  return {
+    async create (name) {
+      if (await gh.repo.create(name))
+        console.log(`${name} created on github`)
+      else if (await gh.repo.clone(name))
+        console.log(`${name} cloned from github`)
+      else console.error(`${name} couldn't be created or cloned on github`)
+
+      if (await Fs.ensureDir(Path.join(desktop_path, name)))
+        console.log(`${name} desktop path exists`)
+    },
+
+    async delete (name, delete_gh) {
+      if (delete_gh && false && await gh.repo.delete(name))
+        console.log(`${name} deleted from github`)
+      console.log(`${name} no delete yet`)
+      if (false && await Fs.remove(Path.join(path, name)))
+        console.log(`${name} deleted from the desktop`)
+    }
+  }
+}
+
 
 try {
-  gh_token = (await fs.readFile(token_path, 'utf8')).trim()
+  gh_token = (await Fs.readFile(token_path, 'utf8')).trim()
 } catch (e) {
   console.error(`could not get github access token from '${token_path}'`)
 }
 
 try {
   const gh = new GitHub(user, gh_token)
-  if (await gh.repo.delete('testing123'))
-    console.log('deleted successfully')
-  if (await gh.repo.create('testing123'))
-    console.log('created successfully')
+  const desktop = new Desktop(gh, desktop_path)
+
+  await desktop.delete('testing123', true)
+  await desktop.create('world-net')
+  await desktop.create('24andme')
 
   console.log('done')
 
