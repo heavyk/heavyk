@@ -95,13 +95,15 @@ function Desktop (gh, path) {
 
         await repo.branch(['-M', 'main'])
 
-        let remotes = await repo.getRemotes(true)
-        if (remotes.filter(r => r.name === 'github').length) {
-          if (await repo.remote(['set-url', 'github', remote_url]))
-            console.log(`${name}: set github remote`)
-        } else {
-          if (await repo.addRemote('github', remote_url))
-            console.log(`${name}: added github remote`)
+        if (gh_create) {
+          let remotes = await repo.getRemotes(true)
+          if (remotes.filter(r => r.name === 'github').length) {
+            if (await repo.remote(['set-url', 'github', remote_url]))
+              console.log(`${name}: set github remote`)
+          } else {
+            if (await repo.addRemote('github', remote_url))
+              console.log(`${name}: added github remote`)
+          }
         }
 
         if (await repo.push('github', 'main', ['-u']))
@@ -133,10 +135,13 @@ try {
   const gh = new GitHub('heavyk', gh_token)
   const desktop = new Desktop(gh, desktop_path)
 
-  await desktop.delete('testing123', true)
-  await desktop.create('testing123')
+  // await desktop.delete('testing123', true)
+  // await desktop.create('testing123')
+
   // await desktop.create('world-net')
   // await desktop.create('24andme')
+
+  // await desktop.delete('pure-desire', true)
   await desktop.create('pure-desire')
 
   console.log('done')
