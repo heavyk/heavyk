@@ -22,6 +22,7 @@
     "fs-extra": "^11.2.0",
     "object-assign": "^4.1.1",
     "pify": "^6.1.0",
+    "simple-git": "^3.24.0",
     "undici": "^6.10.2"
   }
 }

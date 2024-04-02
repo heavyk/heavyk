@@ -1,7 +1,10 @@
-import Fs from 'fs-extra/esm'
+import Fs from 'fs-extra'
 import Path from 'path'
 import console from 'console'
 import assign from 'object-assign'
+// import chokidar from 'chokidar'
+// import { File, Dir } from 'fs-pro'
+import Git from 'simple-git'
 
 // node doesn't know how to use HTTPS_PROXY env.... sad
 import { fetch as ufetch } from 'undici'
@@ -10,17 +13,17 @@ const fetch = fetch_enhanced(ufetch, {undici: true})
 
 // ----------------------------------------------------
 
-const desktop_path = Path.resolve(Path.join(__dirname, '..'))
-const token_path = Path.resolve(Path.join(desktop_path, '..', gh_token))
+const desktop_path = Path.resolve(Path.join(import.meta.dirname, '..'))
+const token_path = Path.resolve(Path.join(desktop_path, '..', 'gh_token'))
 
 let gh_token
-let repo_name = 'testing123'
 let user = 'heavyk'
 
 function GitHub (user, auth) {
   function do_fetch (method, url, opts) {
     return fetch(url, {
       method,
+      verbose: true,
       body: JSON.stringify(opts),
       headers: {
         "Accept": "application/vnd.github+json",
@@ -35,13 +38,17 @@ function GitHub (user, auth) {
       async create (name, options) {
         options = assign({name, private: false}, options)
         let res = await do_fetch('POST', 'https://api.github.com/user/repos', options)
-        return  res.status == 201 ? (await res.json()) : false
+        return res.status === 201 ? (await res.json()) : false
       },
 
       async delete (name) {
         let res = await do_fetch('DELETE', `https://api.github.com/repos/${user}/${name}`)
-        return res.status == 204 ? true : false
-      }
+        return res.status === 204
+      },
+
+      async clone (name) {
+
+      },
     }
   }
 }
@@ -50,26 +57,63 @@ function Desktop (gh, path) {
   if (!gh) throw new Error('desktop needs the github api')
   if (!path) throw new Error('desktop needs to know its path')
 
-  
+  let repos = []
+
+  // let watcher = chokidar.watch(path, { depth: 1 })
+  // watcher.on('addDir', path => {
+  //   console.log('desktop dir', path)
+  // })
 
   return {
+    async add (name) {
+      console.log('no op')
+    },
+
     async create (name) {
-      if (await gh.repo.create(name))
-        console.log(`${name} created on github`)
+      let gh_create = await gh.repo.create(name)
+      if (gh_create)
+        console.log(`${name} created on github: ${gh_create.html_url}`)
       else if (await gh.repo.clone(name))
         console.log(`${name} cloned from github`)
       else console.error(`${name} couldn't be created or cloned on github`)
 
-      if (await Fs.ensureDir(Path.join(desktop_path, name)))
-        console.log(`${name} desktop path exists`)
+      const repo_path = Path.join(desktop_path, name)
+      const remote_url = `https://${user}:${gh_token}@github.com/${gh_create.full_name}`
+
+      await Fs.ensureDir(repo_path)
+      if (await Fs.exists(repo_path)) {
+        let repo = Git(repo_path)
+        await repo.init()
+
+        const readme_path = Path.join(repo_path, "README.md")
+        if (!(await Fs.exists(readme_path))) {
+          await Fs.writeFile(readme_path, `# ${name} readmeee\n`)
+          await repo.add('.')
+          await repo.commit('initial commit')
+        }
+
+        await repo.branch(['-M', 'main'])
+
+        let remotes = await repo.getRemotes(true)
+        if (!remotes.filter(r => r.name === 'github').length) {
+          if (await repo.remote(['set-url', 'github', remote_url]))
+            console.log(`${name}: set github remote`)
+        } else {
+          if (await repo.addRemote('github', remote_url))
+            console.log(`${name}: added github remote`)
+        }
+
+        if (await repo.push('github', 'main', ['-u']))
+          console.log(`${name}: pushed successfully`)
+      }
     },
 
     async delete (name, delete_gh) {
-      if (delete_gh && false && await gh.repo.delete(name))
+      if (delete_gh && await gh.repo.delete(name))
         console.log(`${name} deleted from github`)
-      console.log(`${name} no delete yet`)
-      if (false && await Fs.remove(Path.join(path, name)))
-        console.log(`${name} deleted from the desktop`)
+
+      // if (await Fs.remove(Path.join(path, name)))
+      //   console.log(`${name} deleted from the desktop`)
     }
   }
 }
@@ -77,17 +121,19 @@ function Desktop (gh, path) {
 
 try {
   gh_token = (await Fs.readFile(token_path, 'utf8')).trim()
-} catch (e) {
-  console.error(`could not get github access token from '${token_path}'`)
+} catch (_e) {
+  console.error(`could not get github access token from '${token_path}'`, _e)
 }
 
 try {
-  const gh = new GitHub(user, gh_token)
+  const gh = new GitHub('heavyk', gh_token)
   const desktop = new Desktop(gh, desktop_path)
 
   await desktop.delete('testing123', true)
-  await desktop.create('world-net')
-  await desktop.create('24andme')
+  await desktop.create('testing123')
+  // await desktop.create('world-net')
+  // await desktop.create('24andme')
+  // await desktop.create('pure-desire')
 
   console.log('done')
 
