@@ -127,7 +127,7 @@ function Desktop (gh, path) {
         let sm = await desktop.subModule()
         let sms = sm.trim().split('\n').map(s => { // this is pretty nasty. remake and contribute a LineParser to simple-git?
           let ss = s.trim().split(' ')
-          return {hash: ss[0], name: ss[1], refs: ss[2]}
+          return { hash: ss[0], name: ss[1], refs: ss[2] }
         })
 
         // testing:
@@ -136,7 +136,7 @@ function Desktop (gh, path) {
 
         if (!sms.find(e => e.name === name)) {
           // await desktop.stash()
-          console.log('add', repo_url, repo_rpath)
+          console.log('submodule add', repo_url, repo_rpath)
           let sma = await desktop.submoduleAdd(repo_url, Path.relative(desktop_path, repo_path))
           let smc = await desktop.commit(`add ${name}`)
           // await desktop.stash(['pop'])
@@ -167,11 +167,11 @@ try {
   const gh = new GitHub('heavyk', gh_token)
   const desktop = new Desktop(gh, desktop_path)
 
-  // await desktop.delete('testing123', true)
+  await desktop.delete('testing123', true)
   // await desktop.create('testing123')
 
-  // await desktop.create('world-net')
-  // await desktop.create('24andme')
+  await desktop.create('world-net')
+  await desktop.create('24andme')
 
   // await desktop.delete('pure-desire', true)
   await desktop.create('pure-desire')
