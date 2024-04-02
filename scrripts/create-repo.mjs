@@ -1,5 +1,5 @@
 import Fs from 'fs-extra'
-import Path from 'path'
+import Path, { relative } from 'path'
 import console from 'console'
 import assign from 'object-assign'
 // import chokidar from 'chokidar'
@@ -80,6 +80,7 @@ function Desktop (gh, path) {
       else console.error(`${name} couldn't be created or cloned on github`)
 
       const repo_path = Path.join(desktop_path, name)
+      const repo_rpath = Path.relative(desktop_path, repo_path)
       const user_reop = `${user}/${name}`
       const repo_url = `https://github.com/${user_reop}`
       const remote_url = `https://${user}:${gh_token}@github.com/${user_reop}`
@@ -112,9 +113,35 @@ function Desktop (gh, path) {
         if (await repo.push('github', 'main', ['-u']))
           console.log(`${name}: pushed successfully`)
 
+        let st = await desktop.status()
+        console.log('status', st)
+        // for (let fst of st.files) {
+        //   if (fst.index === '?' && fst.working_dir === '?') {
+        //     // not sure what causes this (I think copying a git dir into this one)
+        //     // however, it gives the error:
+        //     await desktop.rm(['--cached', fst.path])
+        //     console.log('removing cached thing', fst.path)
+        //   }
+        // }
+
         let sm = await desktop.subModule()
-        let r1 = await desktop.submoduleAdd(repo_url, repo_path)
-        let r2 = await desktop.commit(`add ${name}`)
+        let sms = sm.trim().split('\n').map(s => { // this is pretty nasty. remake and contribute a LineParser to simple-git?
+          let ss = s.trim().split(' ')
+          return {hash: ss[0], name: ss[1], refs: ss[2]}
+        })
+
+        // testing:
+        if (sms.find(e => e.name === name))
+          await desktop.rm(['--cached', repo_rpath])
+
+        if (!sms.find(e => e.name === name)) {
+          // await desktop.stash()
+          console.log('add', repo_url, repo_rpath)
+          let sma = await desktop.submoduleAdd(repo_url, Path.relative(desktop_path, repo_path))
+          let smc = await desktop.commit(`add ${name}`)
+          // await desktop.stash(['pop'])
+        }
+
         console.log(`added ${name} to desktop`)
       }
     },
