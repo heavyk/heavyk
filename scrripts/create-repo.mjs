@@ -60,6 +60,7 @@ function Desktop (gh, path) {
   let repos = []
   let desktop = Git(desktop_path)
 
+
   // let watcher = chokidar.watch(path, { depth: 1 })
   // watcher.on('addDir', path => {
   //   console.log('desktop dir', path)
@@ -79,7 +80,9 @@ function Desktop (gh, path) {
       else console.error(`${name} couldn't be created or cloned on github`)
 
       const repo_path = Path.join(desktop_path, name)
-      const remote_url = `https://${user}:${gh_token}@github.com/${gh_create.full_name}`
+      const user_reop = `${user}/${name}`
+      const repo_url = `https://github.com/${user_reop}`
+      const remote_url = `https://${user}:${gh_token}@github.com/${user_reop}`
 
       await Fs.ensureDir(repo_path)
       if (await Fs.exists(repo_path)) {
@@ -109,8 +112,10 @@ function Desktop (gh, path) {
         if (await repo.push('github', 'main', ['-u']))
           console.log(`${name}: pushed successfully`)
 
-        desktop.submoduleAdd(gh_create.html_url, repo_path)
-        desktop.commit(`add ${name}`)
+        let sm = await desktop.subModule()
+        let r1 = await desktop.submoduleAdd(repo_url, repo_path)
+        let r2 = await desktop.commit(`add ${name}`)
+        console.log(`added ${name} to desktop`)
       }
     },
 
