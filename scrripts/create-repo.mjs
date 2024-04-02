@@ -86,12 +86,12 @@ function Desktop (gh, path) {
         let repo = Git(repo_path)
         await repo.init()
 
-        const readme_path = Path.join(repo_path, "README.md")
-        if (!(await Fs.exists(readme_path))) {
-          await Fs.writeFile(readme_path, `# ${name} readmeee\n`)
-          await repo.add('.')
-          await repo.commit('initial commit')
-        }
+        // const readme_path = Path.join(repo_path, "README.md")
+        // if (!(await Fs.exists(readme_path))) {
+        //   await Fs.writeFile(readme_path, `# ${name}\n`)
+        //   await repo.add('.')
+        //   await repo.commit('initial commit')
+        // }
 
         await repo.branch(['-M', 'main'])
 
@@ -137,7 +137,7 @@ try {
   await desktop.create('testing123')
   // await desktop.create('world-net')
   // await desktop.create('24andme')
-  // await desktop.create('pure-desire')
+  await desktop.create('pure-desire')
 
   console.log('done')
 
