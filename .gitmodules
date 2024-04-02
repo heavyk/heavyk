@@ -7,3 +7,6 @@
 [submodule "world-net"]
 	path = world-net
 	url = https://github.com/heavyk/world-net
+[submodule "24andme"]
+	path = 24andme
+	url = https://github.com/heavyk/24andme
