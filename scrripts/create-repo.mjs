@@ -58,6 +58,7 @@ function Desktop (gh, path) {
   if (!path) throw new Error('desktop needs to know its path')
 
   let repos = []
+  let desktop = Git(desktop_path)
 
   // let watcher = chokidar.watch(path, { depth: 1 })
   // watcher.on('addDir', path => {
@@ -95,7 +96,7 @@ function Desktop (gh, path) {
         await repo.branch(['-M', 'main'])
 
         let remotes = await repo.getRemotes(true)
-        if (!remotes.filter(r => r.name === 'github').length) {
+        if (remotes.filter(r => r.name === 'github').length) {
           if (await repo.remote(['set-url', 'github', remote_url]))
             console.log(`${name}: set github remote`)
         } else {
@@ -105,6 +106,9 @@ function Desktop (gh, path) {
 
         if (await repo.push('github', 'main', ['-u']))
           console.log(`${name}: pushed successfully`)
+
+        desktop.submoduleAdd(gh_create.html_url, repo_path)
+        desktop.commit(`add ${name}`)
       }
     },
 
