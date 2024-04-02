@@ -1,3 +1,6 @@
 [submodule "testing123"]
 	path = testing123
 	url = https://github.com/heavyk/testing123
+[submodule "pure-desire"]
+	path = pure-desire
+	url = https://github.com/heavyk/pure-desire
